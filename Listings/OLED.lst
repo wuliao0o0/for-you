@@ -1,0 +1,317 @@
+C51 COMPILER V9.54   OLED                                                                  09/28/2022 21:07:26 PAGE 1   
+
+
+C51 COMPILER V9.54, COMPILATION OF MODULE OLED
+OBJECT MODULE PLACED IN .\Objects\OLED.obj
+COMPILER INVOKED BY: D:\keil5\C51\BIN\C51.EXE hardware\OLED.c OPTIMIZE(8,SPEED) BROWSE INCDIR(.\hardware;.\software) DEB
+                    -UG OBJECTEXTEND PRINT(.\Listings\OLED.lst) TABS(2) OBJECT(.\Objects\OLED.obj)
+
+line level    source
+
+   1          #include <intrins.h>
+   2          #include "public.h"
+   3          #include "OLED.h"
+   4          #include "ASCII.h"
+   5          #include "text.h"
+   6          #include "port.h"
+   7          #include "delay.h"
+   8          #include "i2c.h"
+   9          
+  10          //使用位操作加快iic读取速度
+  11          u8 bdata Byte_data;
+  12          sbit Byte_data7=Byte_data^7;
+  13          sbit Byte_data6=Byte_data^6;
+  14          sbit Byte_data5=Byte_data^5;
+  15          sbit Byte_data4=Byte_data^4;
+  16          sbit Byte_data3=Byte_data^3;
+  17          sbit Byte_data2=Byte_data^2;
+  18          sbit Byte_data1=Byte_data^1;
+  19          sbit Byte_data0=Byte_data^0;
+  20          
+  21          
+  22          void OLED_delay500ms()//11.0592MHz
+  23          {
+  24   1        unsigned char i, j, k;
+  25   1      
+  26   1        _nop_();
+  27   1        _nop_();
+  28   1        i = 22;
+  29   1        j = 3;
+  30   1        k = 227;
+  31   1        do
+  32   1        {
+  33   2          do
+  34   2          {
+  35   3            while (--k);
+  36   3          } while (--j);
+  37   2        } while (--i);
+  38   1      }
+  39          
+  40          
+  41          
+  42          
+  43          //IIC写入一个字节(字节)
+  44          void IIC_write_Byte(u8 Byte)
+  45          {
+  46   1        I2C_SCL=0;
+  47   1        Byte_data=Byte;
+  48   1        I2C_SDA=Byte_data7;I2C_SCL=1;I2C_SCL=0;
+  49   1        I2C_SDA=Byte_data6;I2C_SCL=1;I2C_SCL=0;
+  50   1        I2C_SDA=Byte_data5;I2C_SCL=1;I2C_SCL=0;
+  51   1        I2C_SDA=Byte_data4;I2C_SCL=1;I2C_SCL=0;
+  52   1        I2C_SDA=Byte_data3;I2C_SCL=1;I2C_SCL=0;
+  53   1        I2C_SDA=Byte_data2;I2C_SCL=1;I2C_SCL=0;
+  54   1        I2C_SDA=Byte_data1;I2C_SCL=1;I2C_SCL=0;
+C51 COMPILER V9.54   OLED                                                                  09/28/2022 21:07:26 PAGE 2   
+
+  55   1        I2C_SDA=Byte_data0;I2C_SCL=1;I2C_SCL=0;                                               
+  56   1        I2C_SCL=1;//IIC应答
+  57   1        I2C_SCL=0;
+  58   1      }
+  59          
+  60          //MCU向OLED写入一个字节(字节数据,选择字节为命令还是数据)
+  61          void MCU_write_OLED_Byte(u8 Byte,u8 command_or_data)
+  62          {
+  63   1        IIC_start();//IIC通信开始
+  64   1        IIC_write_Byte(0x78);//从机地址
+  65   1        IIC_write_Byte(command_or_data);
+  66   1        IIC_write_Byte(Byte);
+  67   1        IIC_stop();//IIC通信停止
+  68   1      }
+  69          
+  70          //光标的位置,0到7行,0到127列(行,列)
+  71          void OLED_cursor_location(u8 row,u8 column)
+  72          {
+  73   1        MCU_write_OLED_Byte(0xB0+row,OLED_COMMAND);//设置行(0~7)
+  74   1      
+  75   1        MCU_write_OLED_Byte(0x10|(column&0xF0)>>4,OLED_COMMAND);//设置显示位置大列(0~7)
+  76   1      
+  77   1        MCU_write_OLED_Byte(0x00|(column&0x0F),OLED_COMMAND);//设置显示位置小列(0~7)
+  78   1      
+  79   1      }
+  80          
+  81          //设置内存地址模式(使用水平地址模式:0x00或垂直地址模式:0x01)
+  82          void OLED_set_memory_address_mode(u8 mode)
+  83          {
+  84   1        MCU_write_OLED_Byte(0x20,OLED_COMMAND);//设置内存地址模式(使用水平地址模式或垂直地址
+             -模式)
+  85   1        MCU_write_OLED_Byte(mode,OLED_COMMAND);//水平地址模式:0x00,垂直地址模式:0x01,页地址模式:
+             -0x02
+  86   1        MCU_write_OLED_Byte(0x21,OLED_COMMAND);//设置显示位置列初始地址和终止地址
+  87   1        MCU_write_OLED_Byte(0x00,OLED_COMMAND);//列初始地址
+  88   1        MCU_write_OLED_Byte(0x7F,OLED_COMMAND);//列终止地址
+  89   1        MCU_write_OLED_Byte(0x22,OLED_COMMAND);//设置显示位置页初始地址和终止地址
+  90   1        MCU_write_OLED_Byte(0x00,OLED_COMMAND);//页初始地址
+  91   1        MCU_write_OLED_Byte(0x07,OLED_COMMAND);//页终止地址
+  92   1      }
+  93          
+  94          //清屏
+  95          void OLED_clear()
+  96          {  
+  97   1        u16 i;
+  98   1        for(i=0;i<1024;++i) MCU_write_OLED_Byte(0x00,OLED_DATA);
+  99   1      }
+ 100          
+ 101          //打印BMP图片(图片数组,选择图片的取模方式(水平取模:0x00或垂直取模:0x01),是否�
+             -�色(填0或1))
+ 102          void OLED_print_BMP(u8 *p,u8 mode,u8 invert_color)
+ 103          {
+ 104   1        u16 i;
+ 105   1        OLED_set_memory_address_mode(mode);
+ 106   1        if(invert_color) for(i=0;i<1024;++i) MCU_write_OLED_Byte(~*(p+i),OLED_DATA);
+ 107   1        else for(i=0;i<1024;++i) MCU_write_OLED_Byte(*(p+i),OLED_DATA);
+ 108   1      }
+ 109          
+ 110          //OLED打印单个字符(行(0到3),列(0到15),字符,是否反色(填0或1))
+ 111          void OLED_print_char(u8 row,u8 column,u8 _char,u8 invert_color)
+ 112          {
+ 113   1        u8 i;
+C51 COMPILER V9.54   OLED                                                                  09/28/2022 21:07:26 PAGE 3   
+
+ 114   1        if(invert_color)
+ 115   1        {
+ 116   2          //光标的位置,0到7行,0到127列(行,列)
+ 117   2          OLED_cursor_location(2*row,8*column);
+ 118   2          for(i=0;i<8;++i) MCU_write_OLED_Byte(~ASCII[_char-32][i],OLED_DATA);//因为ASCII码0到31位去除了,�
+             -��以减32
+ 119   2          //光标的位置,0到7行,0到127列(行,列)
+ 120   2          OLED_cursor_location(2*row+1,8*column);
+ 121   2          for(i=0;i<8;++i) MCU_write_OLED_Byte(~ASCII[_char-32][i+8],OLED_DATA);//因为ASCII码0到31位去除了
+             -,所以减32
+ 122   2        }
+ 123   1        else
+ 124   1        {
+ 125   2          //光标的位置,0到7行,0到127列(行,列)
+ 126   2          OLED_cursor_location(2*row,8*column);
+ 127   2          for(i=0;i<8;++i) MCU_write_OLED_Byte(ASCII[_char-32][i],OLED_DATA);//因为ASCII码0到31位去除了,�
+             -�以减32
+ 128   2          //光标的位置,0到7行,0到127列(行,列)
+ 129   2          OLED_cursor_location(2*row+1,8*column);
+ 130   2          for(i=0;i<8;++i) MCU_write_OLED_Byte(ASCII[_char-32][i+8],OLED_DATA);//因为ASCII码0到31位去除了,
+             -所以减32
+ 131   2        }
+ 132   1      }
+ 133          
+ 134          //OLED打印单个文字(行(0到3),列(0到15),单个所在文字的数组,是否反色(填0或1))
+ 135          void OLED_print_single_word(u8 row,u8 column,u8 *word,u8 invert_color)
+ 136          {
+ 137   1        u16 i;
+ 138   1        u8 j;
+ 139   1        for(i=0;i<(sizeof(text))/35;++i)
+ 140   1        {
+ 141   2          if((*word==text[i].name[0])&&(*(word+1)==text[i].name[1]))//对比汉字区码位码
+ 142   2          {
+ 143   3            //光标的位置,0到7行,0到127列(行,列)
+ 144   3            OLED_cursor_location(2*row,8*column);
+ 145   3            for(j=0;j<32;++j)
+ 146   3            {
+ 147   4              if(j==16) OLED_cursor_location(2*row+1,8*column);//光标的位置,0到7行,0到127列(行,列)
+ 148   4              if(invert_color) MCU_write_OLED_Byte(~text[i].array[j],OLED_DATA);
+ 149   4              else MCU_write_OLED_Byte(text[i].array[j],OLED_DATA);
+ 150   4            }
+ 151   3          }
+ 152   2        }
+ 153   1      }
+ 154          
+ 155          //OLED打印文本(行(0到3),列(0到15),所打印的文本,是否反色(填0或1))
+ 156          void OLED_print_text(u8 row,u8 column,u8 *p,u8 invert_color)
+ 157          {
+ 158   1        //设置内存地址模式(使用水平地址模式:0x00或垂直地址模式:0x01)
+ 159   1        OLED_set_memory_address_mode(0x00);
+ 160   1        while(*p!='\0')
+ 161   1        {
+ 162   2          if(*p&0x80)//判断是否为汉字
+ 163   2          {
+ 164   3            //OLED打印单个文字(行(0到3),列(0到15),单个所在文字的数组,是否反色(填0或1))
+ 165   3            OLED_print_single_word(row,column,p,invert_color);
+ 166   3            p=p+2;
+ 167   3            column=column+2;
+ 168   3          }
+ 169   2          else
+ 170   2          {
+ 171   3            //OLED打印单个字符(行(0到3),列(0到15),字符,是否反色(填0或1))
+C51 COMPILER V9.54   OLED                                                                  09/28/2022 21:07:26 PAGE 4   
+
+ 172   3            OLED_print_char(row,column,*p,invert_color);
+ 173   3            ++p;
+ 174   3            ++column;
+ 175   3          }
+ 176   2          
+ 177   2          if(*p&0x80)//判断下一个字符是中文还是英文,防止在末尾显示的位置不够
+ 178   2          {
+ 179   3            if(column>=15)
+ 180   3            {
+ 181   4              ++row;
+ 182   4              column=0;
+ 183   4            }
+ 184   3          }
+ 185   2          else
+ 186   2          {
+ 187   3            if(column==16)
+ 188   3            {
+ 189   4              ++row;
+ 190   4              column=0;
+ 191   4            }
+ 192   3          }
+ 193   2          
+ 194   2          if(row==4) return;//第四行不存在,显示到第四行直接退出(从第零行开始算)
+ 195   2        }
+ 196   1      }
+ 197          
+ 198          void OLED_ShowNum(unsigned char Line, unsigned char Column, unsigned int Num)
+ 199          {
+ 200   1        int Length,result,flag=Num;
+ 201   1        unsigned char i;
+ 202   1        if(Num==0)
+ 203   1        {
+ 204   2          OLED_print_char(Line,Column,0+'0',0);
+ 205   2        }else
+ 206   1        {
+ 207   2            for(Length=0;Num>0;Length++)
+ 208   2          {
+ 209   3            result=Num;
+ 210   3            result%=10;
+ 211   3            Num/=10;
+ 212   3          }
+ 213   2          for (i = 0; i < Length; i++)              
+ 214   2          {
+ 215   3      //      OLED_ShowChar(Line, Column + i, flag/ OLED_Pow(10, Length - i - 1) % 10 + '0');
+ 216   3            OLED_print_char(Line, Column++,flag/OLED_Pow(10, Length - i - 1) % 10 + '0',0);
+ 217   3          }
+ 218   2        }
+ 219   1        
+ 220   1      }
+ 221          
+ 222          /**
+ 223            * @brief  OLED次方函数
+ 224            * @retval 返回值等于X的Y次方
+ 225            */
+ 226          unsigned int OLED_Pow(unsigned int X, unsigned int Y)
+ 227          {
+ 228   1        unsigned int Result = 1;
+ 229   1        while (Y--)
+ 230   1        {
+ 231   2          Result *= X;
+ 232   2        }
+ 233   1        return Result;
+C51 COMPILER V9.54   OLED                                                                  09/28/2022 21:07:26 PAGE 5   
+
+ 234   1      }
+ 235          
+ 236          //初始化OLED(内存地址模式默认使用水平地址模式,可在初始化程序中更改)
+ 237          void OLED_init()
+ 238          {
+ 239   1        OLED_delay500ms();
+ 240   1      
+ 241   1        MCU_write_OLED_Byte(0xAE,OLED_COMMAND);//关闭显示
+ 242   1        MCU_write_OLED_Byte(0x00,OLED_COMMAND);//设置低列地址
+ 243   1        MCU_write_OLED_Byte(0x10,OLED_COMMAND);//设置高列地址
+ 244   1        MCU_write_OLED_Byte(0x40,OLED_COMMAND);//设置显示起始行
+ 245   1        
+ 246   1        MCU_write_OLED_Byte(0xB0,OLED_COMMAND);//设置页地址
+ 247   1        MCU_write_OLED_Byte(0x81,OLED_COMMAND);//
+ 248   1        MCU_write_OLED_Byte(0xFF,OLED_COMMAND);//
+ 249   1        
+ 250   1        MCU_write_OLED_Byte(0xA1,OLED_COMMAND);//设置细分重映射(0xA1正常,0xA0左右反置)
+ 251   1        MCU_write_OLED_Byte(0xA6,OLED_COMMAND);//设置正常/反向(0xA6正常显示,0xA7反向显示)
+ 252   1        MCU_write_OLED_Byte(0xA8,OLED_COMMAND);//设置多路比率
+ 253   1        MCU_write_OLED_Byte(0x3F,OLED_COMMAND);
+ 254   1        MCU_write_OLED_Byte(0xC8,OLED_COMMAND);//设置列输出扫描方向(0xC8正常,0xC0上下反置)
+ 255   1        MCU_write_OLED_Byte(0xD3,OLED_COMMAND);//设置显示偏移(垂直偏移)
+ 256   1        MCU_write_OLED_Byte(0x00,OLED_COMMAND);
+ 257   1        MCU_write_OLED_Byte(0xD5,OLED_COMMAND);//设置显示时钟分频
+ 258   1        MCU_write_OLED_Byte(0x80,OLED_COMMAND);
+ 259   1        MCU_write_OLED_Byte(0xD9,OLED_COMMAND);//设置预充电周期
+ 260   1        MCU_write_OLED_Byte(0xF1,OLED_COMMAND);//将预充电设置为15个时钟加上其放电设置为1个时�
+             -��
+ 261   1        MCU_write_OLED_Byte(0xDA,OLED_COMMAND);//设置COM口硬件配置
+ 262   1        MCU_write_OLED_Byte(0x12,OLED_COMMAND);//启用备用COM向导配置
+ 263   1        MCU_write_OLED_Byte(0xDB,OLED_COMMAND);//设置Vcomh取消选择等级
+ 264   1        MCU_write_OLED_Byte(0x30,OLED_COMMAND);//
+ 265   1        MCU_write_OLED_Byte(0x8D,OLED_COMMAND);//充电凹凸设置
+ 266   1        MCU_write_OLED_Byte(0x14,OLED_COMMAND);//在显示期间启用血浆泵
+ 267   1        MCU_write_OLED_Byte(0xAF,OLED_COMMAND);//开启显示
+ 268   1        
+ 269   1        //光标的位置,0到7行,0到127列(行,列)
+ 270   1        OLED_cursor_location(0,0);
+ 271   1        
+ 272   1        //设置内存地址模式(使用水平地址模式:0x00或垂直地址模式:0x01)
+ 273   1        OLED_set_memory_address_mode(0x00);
+ 274   1        
+ 275   1        //清屏
+ 276   1        OLED_clear();
+ 277   1      } 
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =   1280    ----
+   CONSTANT SIZE    =   1660    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =      1      44
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

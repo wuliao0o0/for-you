@@ -1,0 +1,74 @@
+C51 COMPILER V9.54   DISTANCE                                                              09/28/2022 21:07:26 PAGE 1   
+
+
+C51 COMPILER V9.54, COMPILATION OF MODULE DISTANCE
+OBJECT MODULE PLACED IN .\Objects\distance.obj
+COMPILER INVOKED BY: D:\keil5\C51\BIN\C51.EXE hardware\distance.c OPTIMIZE(8,SPEED) BROWSE INCDIR(.\hardware;.\software)
+                    - DEBUG OBJECTEXTEND PRINT(.\Listings\distance.lst) TABS(2) OBJECT(.\Objects\distance.obj)
+
+line level    source
+
+   1          #include <REGX51.H>
+   2          #include "delay.h"
+   3          #include "distance_timeCount.h"
+   4          #include "distance.H"
+   5          #include "OLED.h"
+   6          sbit trig=P1^2;//接收端
+   7          sbit echo=P1^3;//发射端
+   8          unsigned int Distance=0;
+   9          unsigned int Time,flag,flag_distance;
+  10          void SR04_Start()
+  11          {
+  12   1        trig=1;
+  13   1        Delay10us();
+  14   1        trig=0;//拉高后延迟在拉低保证高电平的时间
+  15   1      }
+  16          
+  17          unsigned int distance_Data()
+  18          {
+  19   1        SR04_Start();
+  20   1        while(!echo);
+  21   1        TR0=1;
+  22   1        while(echo);
+  23   1        TR0=0;
+  24   1        Time=TH0*256+TL0;//将TH0（8bit）与TL0(8bit)的值加起来，一个约为1us.如255*256+255=65535
+  25   1        TH0=0;
+  26   1        TL0=0;
+  27   1        Distance=(Time*1.7)/100;//1.7为声速340m/s的一半s
+  28   1        flag_distance=Distance;
+  29   1        Distance=Distance+flag_distance/10+1;//这个是计算出的距离加上误差，可能是有温度造成
+             -的
+  30   1        if(flag==1)
+  31   1        {
+  32   2          flag=0;
+  33   2        }else
+  34   1        {
+  35   2          OLED_clear();
+  36   2          OLED_ShowNum(2,2,Distance);
+  37   2          OLED_print_char(2,5,'c',0);
+  38   2          OLED_print_char(2,6,'m',0);
+  39   2      
+  40   2        }
+  41   1        return Distance;
+  42   1      }
+  43          void Timer0_Routine() interrupt 1
+  44          { 
+  45   1        flag=1;//当定时器满时触发中断后的操作
+  46   1      
+  47   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    174    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+C51 COMPILER V9.54   DISTANCE                                                              09/28/2022 21:07:26 PAGE 2   
+
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =      8    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

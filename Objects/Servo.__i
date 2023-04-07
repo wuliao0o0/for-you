@@ -1,0 +1,1 @@
+"hardware\Servo.c" OPTIMIZE (8,SPEED) BROWSE INCDIR(.\hardware;.\software) DEBUG OBJECTEXTEND PRINT(.\Listings\Servo.lst) TABS (2) OBJECT(.\Objects\Servo.obj)

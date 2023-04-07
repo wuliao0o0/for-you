@@ -1,0 +1,88 @@
+C51 COMPILER V9.54   UART                                                                  09/28/2022 21:07:27 PAGE 1   
+
+
+C51 COMPILER V9.54, COMPILATION OF MODULE UART
+OBJECT MODULE PLACED IN .\Objects\uart.obj
+COMPILER INVOKED BY: D:\keil5\C51\BIN\C51.EXE software\uart.c OPTIMIZE(8,SPEED) BROWSE INCDIR(.\hardware;.\software) DEB
+                    -UG OBJECTEXTEND PRINT(.\Listings\uart.lst) TABS(2) OBJECT(.\Objects\uart.obj)
+
+line level    source
+
+   1          #include <REGX51.H>
+   2          #include "delay.h"
+   3          void Uart_Init(void)
+   4          {   
+   5   1        PCON &= 0x7F;   //æ³¢ç‰¹ç‡ä¸å€é€Ÿ
+   6   1        SCON = 0x50;    //8ä½æ•°æ®,å¯å˜æ³¢ç‰¹ç‡
+   7   1        TMOD &= 0x0F;   //æ¸…é™¤å®šæ—¶å™¨1æ¨¡å¼ä½
+   8   1        TMOD |= 0x20;   //è®¾å®šå®šæ—¶å™¨1ä¸º8ä½è‡ªåŠ¨é‡è£…æ–¹å¼
+   9   1        TL1 = 0xfd;   //è®¾å®šå®šæ—¶åˆå€¼
+  10   1        TH1 = 0xfd;   //è®¾å®šå®šæ—¶åˆå€¼
+  11   1        ET1 = 0;    //ç¦æ­¢å®šæ—¶å™¨1ä¸­æ–­
+  12   1        TR1 = 1;    //å¯åŠ¨å®šæ—¶å™¨1
+  13   1        REN=1;
+  14   1        ES=1;
+  15   1        EA=1;
+  16   1      }
+  17          
+  18          void Uart_SendChar(unsigned char Word)
+  19          {
+  20   1        SBUF=Word;
+  21   1        while(TI==0);
+  22   1        TI=0;
+  23   1      }
+  24          
+  25          void Uart_SendStr(unsigned char *Str)
+  26          { 
+  27   1        while(*Str!='\0')
+  28   1        {
+  29   2          Uart_SendChar(*Str);
+  30   2          Delay5us();
+  31   2          Str++;
+  32   2        }
+  33   1      }
+  34          
+  35          void Uart_SendCmd(unsigned char *cmd)
+  36          {
+  37   1        while(*cmd!='\0')
+  38   1        {
+  39   2          Uart_SendChar(*cmd);
+  40   2          Delay5us();
+  41   2          cmd++;
+  42   2        }
+  43   1        Uart_SendChar('\r');
+  44   1        Delay5us();
+  45   1        Uart_SendChar('\n');
+  46   1        delay(3000);
+  47   1      }
+  48          /*
+  49          void Usart() interrupt 4
+  50          {
+  51            u8 receiveData;
+  52          
+  53            receiveData=SBUF;//³öÈ¥½ÓÊÕµ½µÄÊı¾İ
+  54            RI = 0;//Çå³ı½ÓÊÕÖĞ¶Ï±êÖ¾Î»
+C51 COMPILER V9.54   UART                                                                  09/28/2022 21:07:27 PAGE 2   
+
+  55            SBUF=receiveData;//½«½ÓÊÕµ½µÄÊı¾İ·ÅÈëµ½·¢ËÍ¼Ä´æÆ÷
+  56            while(!TI);      //µÈ´ı·¢ËÍÊı¾İÍê³É
+  57            TI=0;            //Çå³ı·¢ËÍÍê³É±êÖ¾Î»
+  58          }
+  59          */
+  60          
+  61          
+  62          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    132    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----       6
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

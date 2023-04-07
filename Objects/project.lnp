@@ -1,0 +1,13 @@
+".\Objects\STARTUP.obj",
+".\Objects\main.obj",
+".\Objects\OLED.obj",
+".\Objects\ESP8266.obj",
+".\Objects\distance.obj",
+".\Objects\step.obj",
+".\Objects\DELAY.obj",
+".\Objects\eeprom.obj",
+".\Objects\I2C.obj",
+".\Objects\uart.obj",
+".\Objects\distance_timeCount.obj" 
+TO ".\Objects\project" 
+PRINT(".\Listings\project.m51")

@@ -1,0 +1,58 @@
+C51 COMPILER V9.54   SERVO                                                                 09/14/2022 21:30:33 PAGE 1   
+
+
+C51 COMPILER V9.54, COMPILATION OF MODULE SERVO
+OBJECT MODULE PLACED IN .\Objects\Servo.obj
+COMPILER INVOKED BY: D:\keil5\C51\BIN\C51.EXE hardware\Servo.c OPTIMIZE(8,SPEED) BROWSE INCDIR(.\hardware;.\software) DE
+                    -BUG OBJECTEXTEND PRINT(.\Listings\Servo.lst) TABS(2) OBJECT(.\Objects\Servo.obj)
+
+line level    source
+
+   1          #include <REGX51.H>
+   2          #include "timer0.h"
+   3          sbit pwm=P0^0;
+   4          unsigned int counter;
+   5          float compare;
+   6          void Servo_Init(void)
+   7          {
+   8   1        Timer0Init();
+*** WARNING C206 IN LINE 8 OF hardware\Servo.c: 'Timer0Init': missing function-prototype
+   9   1        compare=1;
+  10   1        counter=0;
+  11   1      }
+  12          void Servo_set(float angle)
+  13          {
+  14   1        
+  15   1        compare=(angle/90+0.5)*2;
+  16   1      }
+  17          
+  18          void Timer0_Routine() interrupt 1
+  19          {
+  20   1        TL0 = 0x48; 
+  21   1        TH0 = 0xff;
+  22   1        if(counter<compare)
+  23   1        {
+  24   2          pwm=1;
+  25   2        }
+  26   1        else
+  27   1        {
+  28   2          pwm=0;
+  29   2        }
+  30   1        counter++;
+  31   1        counter%=40;//³¬¹ý20ms¼ÆÊýÆ÷¹éÁã
+  32   1        
+  33   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    169    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =      6    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  1 WARNING(S),  0 ERROR(S)

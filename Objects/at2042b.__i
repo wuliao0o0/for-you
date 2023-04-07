@@ -1,0 +1,1 @@
+"software\at2042b.c" OPTIMIZE (8,SPEED) BROWSE INCDIR(.\hardware;.\software) DEBUG OBJECTEXTEND PRINT(.\Listings\at2042b.lst) TABS (2) OBJECT(.\Objects\at2042b.obj)

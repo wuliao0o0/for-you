@@ -1,0 +1,1 @@
+"hardware\atk-esp8266.c" OPTIMIZE (8,SPEED) BROWSE INCDIR(D:\单片机项目\51\新建文件夹\hardware;D:\单片机项目\51\新建文件夹\software) DEBUG OBJECTEXTEND PRINT(.\Listings\atk-esp8266.lst) OBJECT(.\Objects\atk-esp8266.obj)
